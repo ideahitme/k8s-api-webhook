@@ -1,0 +1,12 @@
+hash: 8c05cd89b4c5a3e690dba584298195498c2f0a18bbc94c9b594c6f7b8d22b57a
+updated: 2017-05-09T04:09:29.364336231+02:00
+imports:
+- name: github.com/alecthomas/template
+  version: a0175ee3bccc567396460bf5acd36800cb10c49c
+  subpackages:
+  - parse
+- name: github.com/alecthomas/units
+  version: 2efee857e7cfd4f3d0138cc3cbb1b4966962b93a
+- name: gopkg.in/alecthomas/kingpin.v2
+  version: 7f0871f2e17818990e4eed73f9b5c2f429501228
+testImports: []
