@@ -13,7 +13,7 @@ cover-html: cover
 	go tool cover -html cover.out
 
 
-.PHONY: test
+.PHONY: test metalinter
 
 test:
 	go test -v -race $(shell go list ./... | grep -v /vendor/)

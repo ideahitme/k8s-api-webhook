@@ -8,12 +8,18 @@ language: go
 go:
 - 1.8
 
+addons:
+  apt:
+    sources:
+      - sourceline: 'ppa:masterminds/glide'
+    packages:
+      - glide
+
 before_install:
 - go get github.com/mattn/goveralls
-- go get -u github.com/alecthomas/gometalinter
 
 install:
-- gometalinter --install
+- glide install
 
 script:
 - travis_wait 20 goveralls -service=travis-ci
