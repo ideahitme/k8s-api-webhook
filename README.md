@@ -1,6 +1,8 @@
 # k8s-api-webhook
 
 [![Coverage Status](https://coveralls.io/repos/github/ideahitme/k8s-api-webhook/badge.svg?branch=master)](https://coveralls.io/github/ideahitme/k8s-api-webhook?branch=master)
+[![Build Status](https://travis-ci.org/ideahitme/k8s-api-webhook.svg?branch=master)](https://travis-ci.org/ideahitme/k8s-api-webhook)
+
 
 Library for quickly bootstrapping authentication/authorisation webhook for Kubernetes API
 

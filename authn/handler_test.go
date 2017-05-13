@@ -38,10 +38,10 @@ func TestWithAPIVersion(t *testing.T) {
 
 func TestServeHTTP(t *testing.T) {
 	f := testutils.GenerateTestData([][]string{
-		[]string{
+		{
 			"token-1", "foo", "42",
 		},
-		[]string{
+		{
 			"token-2", "bar", "99", "Admin", "Owner",
 		},
 	})

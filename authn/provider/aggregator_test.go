@@ -22,19 +22,19 @@ func TestNewAggregator(t *testing.T) {
 
 func TestAuthenticate(t *testing.T) {
 	usersA := [][]string{
-		[]string{
+		{
 			"1", "kubelet", "kubelet",
 		},
-		[]string{
+		{
 			"2", "controller-manager", "controller-manager", "admin", "owner",
 		},
 	}
 
 	usersB := [][]string{
-		[]string{
+		{
 			"3", "foo", "bar",
 		},
-		[]string{
+		{
 			"4", "baz", "qux",
 		},
 	}

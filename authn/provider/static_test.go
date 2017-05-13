@@ -25,10 +25,10 @@ func TestNewStaticAuthenticator(t *testing.T) {
 		{
 			title: "invalid csv",
 			lines: [][]string{
-				[]string{
+				{
 					"123456", "kubelet",
 				},
-				[]string{
+				{
 					"123456", "controller-manager", "controller-manager",
 				},
 			},
@@ -38,17 +38,17 @@ func TestNewStaticAuthenticator(t *testing.T) {
 		{
 			title: "valid csv",
 			lines: [][]string{
-				[]string{
+				{
 					"1234567kubelet", "kubelet", "kubelet",
 				},
-				[]string{
+				{
 					"1234567manager", "controller-manager", "controller-manager", "admin", "owner",
 				},
 			},
 			expectError: false,
 			expectedOutput: map[string]*unversioned.UserInfo{
-				"1234567kubelet": &unversioned.UserInfo{"kubelet", "kubelet", nil},
-				"1234567manager": &unversioned.UserInfo{"controller-manager", "controller-manager", []string{"admin", "owner"}},
+				"1234567kubelet": {"kubelet", "kubelet", nil},
+				"1234567manager": {"controller-manager", "controller-manager", []string{"admin", "owner"}},
 			},
 		},
 	} {
@@ -77,10 +77,10 @@ func TestStaticAuthenticate(t *testing.T) {
 		{
 			title: "no user",
 			lines: [][]string{
-				[]string{
+				{
 					"1234531226", "kubelet",
 				},
-				[]string{
+				{
 					"12345689", "controller-manager", "controller-manager",
 				},
 			},
@@ -90,10 +90,10 @@ func TestStaticAuthenticate(t *testing.T) {
 		{
 			title: "valid user",
 			lines: [][]string{
-				[]string{
+				{
 					"1234567kubelet", "kubelet", "kubelet",
 				},
-				[]string{
+				{
 					"1234567mvnager", "controller-manager", "controller-manager", "admin", "owner",
 				},
 			},
