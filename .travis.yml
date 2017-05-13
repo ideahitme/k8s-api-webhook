@@ -9,6 +9,7 @@ go:
 - 1.8
 
 before_install:
+- go get github.com/mattn/goveralls
 - go get -u github.com/alecthomas/gometalinter
 
 install:
