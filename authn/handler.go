@@ -3,54 +3,67 @@ package authn
 import (
 	"net/http"
 
-	"io/ioutil"
-
 	"github.com/ideahitme/k8s-api-webhook/authn/provider"
 	"github.com/ideahitme/k8s-api-webhook/authn/v1beta1"
 )
 
 // AuthenticationHandler implements the webhook handler
 type AuthenticationHandler struct {
-	authProvider provider.Authenticator
+	authProvider   provider.Authenticator
+	resConstructor ResponseConstructor
+	reqParser      RequestParser
 }
 
+// Option extends default AuthenticationHandler
+type Option func(*AuthenticationHandler)
+
 // NewAuthenticationHandler returns authentication http handler
-func NewAuthenticationHandler(p provider.Authenticator) *AuthenticationHandler {
-	return &AuthenticationHandler{
-		authProvider: p,
+func NewAuthenticationHandler(p provider.Authenticator, opts ...Option) *AuthenticationHandler {
+	h := &AuthenticationHandler{
+		authProvider:   p,
+		resConstructor: v1beta1.ResponseConstructor{},
+		reqParser:      v1beta1.RequestParser{},
+	}
+
+	for _, opt := range opts {
+		opt(h)
+	}
+
+	return h
+}
+
+// WithAPIVersion specify API version to use for handling authentication requests
+func WithAPIVersion(apiVersion APIVersion) func(*AuthenticationHandler) {
+	return func(h *AuthenticationHandler) {
+		if apiVersion == V1Beta1 {
+			h.resConstructor = v1beta1.ResponseConstructor{}
+			h.reqParser = v1beta1.RequestParser{}
+		}
 	}
 }
 
 func (h *AuthenticationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// extract and check the payload
-	payload, err := ioutil.ReadAll(r.Body)
+	token, err := h.reqParser.ExtractToken(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(v1beta1.NewFailResponse())
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(h.resConstructor.NewFailResponse())
 		return
 	}
 	defer r.Body.Close()
 
-	token, err := v1beta1.ParseToken(payload)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(v1beta1.NewFailResponse())
-		return
-	}
-
 	user, err := h.authProvider.Authenticate(token)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(v1beta1.NewFailResponse())
+		w.Write(h.resConstructor.NewFailResponse())
 		return
 	}
 
 	if user == nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write(v1beta1.NewFailResponse())
+		w.Write(h.resConstructor.NewFailResponse())
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(v1beta1.NewSuccessResponse(user))
+	w.Write(h.resConstructor.NewSuccessResponse(user))
 }

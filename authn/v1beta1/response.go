@@ -60,8 +60,14 @@ type successResponseBody struct {
 	Status     successResponseStatus `json:"status"`
 }
 
+// ResponseConstructor is a helper to return v1beta1 type response
+type ResponseConstructor struct{}
+
 // NewSuccessResponse returns the typical success response for v1beta1 APIVersion
-func NewSuccessResponse(user *unversioned.UserInfo) []byte {
+func (r ResponseConstructor) NewSuccessResponse(user *unversioned.UserInfo) []byte {
+	if user == nil {
+		return nil
+	}
 	resp := &successResponseBody{
 		APIVersion: "authentication.k8s.io/v1beta1",
 		Kind:       "TokenReview",
@@ -80,7 +86,7 @@ func NewSuccessResponse(user *unversioned.UserInfo) []byte {
 }
 
 // NewFailResponse returns the typical fail response for v1beta1 APIVersion
-func NewFailResponse() []byte {
+func (r ResponseConstructor) NewFailResponse() []byte {
 	return []byte(`
 	{
 		"apiVersion": "authentication.k8s.io/v1beta1",

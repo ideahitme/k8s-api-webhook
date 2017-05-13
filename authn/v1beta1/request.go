@@ -3,6 +3,7 @@ package v1beta1
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 )
 
 /**
@@ -25,13 +26,20 @@ type requestBodyType struct {
 	} `json:"spec"`
 }
 
-// ParseToken retrieves token from the payload and validates request struct
-func ParseToken(payload []byte) (string, error) {
+// RequestParser implements parsing of the request for v1beta1 version
+type RequestParser struct {
+}
+
+// ExtractToken retrieves token from the payload and validates request struct
+func (r RequestParser) ExtractToken(reqBody io.ReadCloser) (string, error) {
+	decoder := json.NewDecoder(reqBody)
 	var body requestBodyType
-	err := json.Unmarshal(payload, &body)
+	err := decoder.Decode(&body)
 	if err != nil {
 		return "", err
 	}
+	defer reqBody.Close()
+
 	if body.APIVersion != "authentication.k8s.io/v1beta1" || body.Kind != "TokenReview" {
 		return "", fmt.Errorf("invalid authn request format")
 	}
