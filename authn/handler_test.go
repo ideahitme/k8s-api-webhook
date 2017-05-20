@@ -1,18 +1,15 @@
 package authn
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"net/http"
-
-	"bytes"
-
-	"io/ioutil"
 
 	"github.com/ideahitme/k8s-api-webhook/authn/provider"
 	"github.com/ideahitme/k8s-api-webhook/authn/unversioned"
