@@ -1,16 +1,27 @@
 package main
 
 import (
-	"log"
+	"fmt"
 
-	"github.com/ideahitme/k8s-api-webhook/authn"
-	"github.com/ideahitme/k8s-api-webhook/authn/provider"
+	"github.com/casbin/casbin"
 )
 
 func main() {
-	staticAuthn, err := provider.NewStaticAuthenticator("./tmp")
-	if err != nil {
-		log.Fatal(err)
-	}
-	authn.NewAuthenticationHandler(staticAuthn, authn.WithAPIVersion(authn.V1Beta1))
+	//test non resource access control
+	nonResource := casbin.NewEnforcer("./non-resource/non-resource.conf")
+	fmt.Println(nonResource.Enforce("kubelet", "", "/api", "post"))         //true
+	fmt.Println(nonResource.Enforce("ideahitme", "", "/metrics", "delete")) //true
+	fmt.Println(nonResource.Enforce("yerken", "", "/api", "post"))          //true
+	fmt.Println(nonResource.Enforce("yerken", "", "/api", "get"))           //true
+	fmt.Println(nonResource.Enforce("yerken", "", "/api/print", "get"))     //true
+	fmt.Println(nonResource.Enforce("yerken", "", "/metrics", "get"))       //false
+
+	//group
+	fmt.Println(nonResource.Enforce("yerken", "PowerUser", "/metrics", "delete")) //true
+
+	//test resource based access control
+	resource := casbin.NewEnforcer("./resource/resource.conf")
+	fmt.Println(resource.Enforce("kubelet", "", "kube-system", "pods", "list"))
+	fmt.Println(resource.Enforce("yerken", "", "kube-system", "pods", "list"))
+	fmt.Println(resource.Enforce("yerken", "", "kube-system", "pods", "delete"))
 }

@@ -1,0 +1,8 @@
+p, *, *, *, *, read-only
+
+g3, list, read-only
+g3, get, read-only
+g3, watch, read-only
+
+g, kubelet, admin
+g, kubelet, kube-controller-manager
