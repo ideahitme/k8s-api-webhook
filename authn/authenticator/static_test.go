@@ -1,4 +1,4 @@
-package provider
+package authenticator
 
 import (
 	"os"
@@ -10,17 +10,17 @@ import (
 	"github.com/ideahitme/k8s-api-webhook/internal/testutils"
 )
 
-var _ Authenticator = StaticAuthenticator{}
+var _ Authenticator = Static{}
 
-func TestNewStaticAuthenticator(t *testing.T) {
-	_, err := NewStaticAuthenticator("")
+func TestNewStatic(t *testing.T) {
+	_, err := NewStatic("")
 	assert.NotNil(t, err)
 
 	for _, ti := range []struct {
 		title          string
 		lines          [][]string
 		expectError    bool
-		expectedOutput StaticAuthenticator
+		expectedOutput Static
 	}{
 		{
 			title: "invalid csv",
@@ -55,7 +55,7 @@ func TestNewStaticAuthenticator(t *testing.T) {
 		t.Run(ti.title, func(t *testing.T) {
 			tmpFile := testutils.GenerateTestData(ti.lines)
 			defer os.Remove(tmpFile.Name())
-			authn, err := NewStaticAuthenticator(tmpFile.Name())
+			authn, err := NewStatic(tmpFile.Name())
 			if ti.expectError {
 				assert.NotNil(t, err)
 			}
@@ -104,7 +104,7 @@ func TestStaticAuthenticate(t *testing.T) {
 		t.Run(ti.title, func(t *testing.T) {
 			tmpFile := testutils.GenerateTestData(ti.lines)
 			defer os.Remove(tmpFile.Name())
-			authn, _ := NewStaticAuthenticator(tmpFile.Name())
+			authn, _ := NewStatic(tmpFile.Name())
 			user, err := authn.Authenticate(ti.token)
 			assert.Nil(t, err)
 			assert.Equal(t, ti.expectedUser, user)

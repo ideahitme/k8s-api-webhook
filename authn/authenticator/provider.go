@@ -1,4 +1,4 @@
-package provider
+package authenticator
 
 import "github.com/ideahitme/k8s-api-webhook/authn/unversioned"
 

@@ -1,4 +1,4 @@
-package provider
+package authenticator
 
 import (
 	"encoding/csv"
@@ -9,12 +9,12 @@ import (
 	"github.com/ideahitme/k8s-api-webhook/authn/unversioned"
 )
 
-// StaticAuthenticator represents authentication mechanism via hardcoded
+// Static represents authentication mechanism via hardcoded
 // token - user pair passed via files
-type StaticAuthenticator map[string]*unversioned.UserInfo
+type Static map[string]*unversioned.UserInfo
 
-// NewStaticAuthenticator populates StaticAuthneticator object by reading from passed csv file
-func NewStaticAuthenticator(filepath string) (StaticAuthenticator, error) {
+// NewStatic populates StaticAuthneticator object by reading from passed csv file
+func NewStatic(filepath string) (Static, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
@@ -43,11 +43,11 @@ func NewStaticAuthenticator(filepath string) (StaticAuthenticator, error) {
 		tokens[records[0]] = user
 	}
 
-	return StaticAuthenticator(tokens), nil
+	return Static(tokens), nil
 }
 
 // Authenticate looks up a user for the provided token and returns UID
-func (tokens StaticAuthenticator) Authenticate(token string) (*unversioned.UserInfo, error) {
+func (tokens Static) Authenticate(token string) (*unversioned.UserInfo, error) {
 	if user, ok := tokens[token]; ok {
 		return user, nil
 	}

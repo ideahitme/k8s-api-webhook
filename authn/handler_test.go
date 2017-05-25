@@ -11,15 +11,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ideahitme/k8s-api-webhook/authn/provider"
+	"github.com/ideahitme/k8s-api-webhook/authn/authenticator"
 	"github.com/ideahitme/k8s-api-webhook/authn/unversioned"
 	"github.com/ideahitme/k8s-api-webhook/authn/v1beta1"
 	"github.com/ideahitme/k8s-api-webhook/internal/testutils"
 )
 
 func TestNewAuthenticationHandler(t *testing.T) {
-	h := NewAuthenticationHandler(provider.StaticAuthenticator{}, WithAPIVersion(V1Beta1))
-	assert.Equal(t, h.authProvider, provider.StaticAuthenticator{})
+	h := NewAuthenticationHandler(authenticator.Static{}, WithAPIVersion(V1Beta1))
+	assert.Equal(t, h.authProvider, authenticator.Static{})
 }
 
 func TestWithAPIVersion(t *testing.T) {
@@ -44,11 +44,11 @@ func TestServeHTTP(t *testing.T) {
 	})
 	defer os.Remove(f.Name())
 
-	staticAuthenticator, err := provider.NewStaticAuthenticator(f.Name())
+	staticAuthenticator, err := authenticator.NewStatic(f.Name())
 	assert.Nil(t, err)
 	failAuthenticator := errAuthenticator{invalidToken: "cause-error"}
 
-	handler := NewAuthenticationHandler(provider.NewAggregator(staticAuthenticator, failAuthenticator))
+	handler := NewAuthenticationHandler(authenticator.NewAggregator(staticAuthenticator, failAuthenticator))
 	mockServer := httptest.NewServer(handler)
 	defer mockServer.Close()
 

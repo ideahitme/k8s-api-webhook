@@ -1,4 +1,4 @@
-package provider
+package authenticator
 
 import (
 	"fmt"
@@ -44,8 +44,8 @@ func TestAuthenticate(t *testing.T) {
 	defer os.Remove(tmpA.Name())
 	defer os.Remove(tmpB.Name())
 
-	authnA, _ := NewStaticAuthenticator(tmpA.Name())
-	authnB, _ := NewStaticAuthenticator(tmpB.Name())
+	authnA, _ := NewStatic(tmpA.Name())
+	authnB, _ := NewStatic(tmpB.Name())
 
 	aggr := NewAggregator(authnA, authnB)
 

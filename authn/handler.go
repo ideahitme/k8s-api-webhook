@@ -3,13 +3,13 @@ package authn
 import (
 	"net/http"
 
-	"github.com/ideahitme/k8s-api-webhook/authn/provider"
+	"github.com/ideahitme/k8s-api-webhook/authn/authenticator"
 	"github.com/ideahitme/k8s-api-webhook/authn/v1beta1"
 )
 
 // AuthenticationHandler implements the webhook handler
 type AuthenticationHandler struct {
-	authProvider   provider.Authenticator
+	authProvider   authenticator.Authenticator
 	resConstructor ResponseConstructor
 	reqParser      RequestParser
 }
@@ -18,7 +18,7 @@ type AuthenticationHandler struct {
 type Option func(*AuthenticationHandler)
 
 // NewAuthenticationHandler returns authentication http handler
-func NewAuthenticationHandler(p provider.Authenticator, opts ...Option) *AuthenticationHandler {
+func NewAuthenticationHandler(p authenticator.Authenticator, opts ...Option) *AuthenticationHandler {
 	h := &AuthenticationHandler{
 		authProvider:   p,
 		resConstructor: v1beta1.ResponseConstructor{},
