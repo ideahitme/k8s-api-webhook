@@ -10,7 +10,7 @@ import (
 )
 
 // Static represents authentication mechanism via hardcoded
-// token - user pair passed via files
+// token - user pair passed with a csv file
 type Static map[string]*unversioned.UserInfo
 
 // NewStatic populates StaticAuthneticator object by reading from passed csv file
