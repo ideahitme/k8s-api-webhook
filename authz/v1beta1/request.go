@@ -53,7 +53,7 @@ to discover what resources and versions are present on the server.
 type RequestParser struct {
 }
 
-// ExtractScope reads the request body received from API server and extracts all required scopes by the user
-func (req RequestParser) ExtractScope(io.ReadCloser) (*unversioned.Scope, error) {
-	return nil, nil
+// ExtractSpecs reads the request body received from API server and extracts all required scopes by the user
+func (req RequestParser) ExtractSpecs(io.ReadCloser) (*unversioned.UserSpec, interface{}, error) {
+	return nil, nil, nil
 }
