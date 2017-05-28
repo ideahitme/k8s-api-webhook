@@ -1,6 +1,7 @@
 package v1beta1
 
 import (
+	"encoding/json"
 	"io"
 
 	"github.com/ideahitme/k8s-api-webhook/authz/unversioned"
@@ -49,11 +50,107 @@ request to non-resource objects:
 to discover what resources and versions are present on the server.
 */
 
-// RequestParser implements extraction of the spec according to the official requirement for v1beta1 version
-type RequestParser struct {
+// SubjectAccessReview checks whether or not a user or group can perform an action.
+type SubjectAccessReview struct {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	// Spec holds information about the request being evaluated
+	Spec SubjectAccessReviewSpec `json:"spec"`
 }
 
-// ExtractSpecs reads the request body received from API server and extracts all required scopes by the user
-func (req RequestParser) ExtractSpecs(io.ReadCloser) (*unversioned.UserSpec, interface{}, error) {
-	return nil, nil, nil
+// ResourceAttributes includes the authorization attributes available for resource requests to the Authorizer interface
+type ResourceAttributes struct {
+	// Namespace is the namespace of the action being requested.  Currently, there is no distinction between no namespace and all namespaces
+	Namespace string `json:"namespace,omitempty"`
+	// Verb is a kubernetes resource API verb, like: get, list, watch, create, update, delete, proxy.  "*" means all.
+	Verb string `json:"verb,omitempty"`
+	// Group is the API Group of the Resource.  "*" means all.
+	Group string `json:"group,omitempty"`
+	// Version is the API Version of the Resource.  "*" means all.
+	Version string `json:"version,omitempty"`
+	// Resource is one of the existing resource types.  "*" means all.
+	Resource string `json:"resource,omitempty"`
+	// Subresource is one of the existing resource types.  "" means none.
+	Subresource string `json:"subresource,omitempty"`
+	// Name is the name of the resource being requested for a "get" or deleted for a "delete". "" (empty) means all.
+	Name string `json:"name,omitempty"`
+}
+
+// NonResourceAttributes includes the authorization attributes available for non-resource requests to the Authorizer interface
+type NonResourceAttributes struct {
+	// Path is the URL path of the request
+	Path string `json:"path,omitempty"`
+	// Verb is the standard HTTP verb
+	Verb string `json:"verb,omitempty"`
+}
+
+// SubjectAccessReviewSpec is a description of the access request.  Exactly one of ResourceAuthorizationAttributes
+// and NonResourceAuthorizationAttributes must be set
+type SubjectAccessReviewSpec struct {
+	// ResourceAuthorizationAttributes describes information for a resource access request
+	ResourceAttributes *ResourceAttributes `json:"resourceAttributes,omitempty"`
+	// NonResourceAttributes describes information for a non-resource access request
+	NonResourceAttributes *NonResourceAttributes `json:"nonResourceAttributes,omitempty"`
+	// User is the user you're testing for.
+	User string `json:"user,omitempty"`
+	// Groups is the groups you're testing for.
+	Groups []string `json:"group,omitempty"`
+	// Extra corresponds to the user.Info.GetExtra() method from the authenticator.  Since that is input to the authorizer
+	// it needs a reflection here.
+	Extra map[string][]string `json:"extra,omitempty"`
+}
+
+// RequestParser implements extraction of the spec according to the official requirement for v1beta1 version
+type RequestParser struct {
+	body SubjectAccessReview
+}
+
+func (req RequestParser) ReadBody(body io.ReadCloser) error {
+	decoder := json.NewDecoder(body)
+	requestBody := SubjectAccessReview{}
+	err := decoder.Decode(&requestBody)
+	if err != nil {
+		return err
+	}
+	defer body.Close()
+
+	req.body = requestBody
+	return nil
+}
+
+func (req RequestParser) IsResourceRequest() bool {
+	return req.body.Spec.ResourceAttributes != nil
+}
+
+func (req RequestParser) IsNonResourceRequest() bool {
+	return req.body.Spec.NonResourceAttributes != nil
+}
+
+func (req RequestParser) ExtractResourceSpecs() *unversioned.ResourceSpec {
+	if !req.IsResourceRequest() {
+		return nil
+	}
+	return &unversioned.ResourceSpec{
+		Namespace: req.body.Spec.ResourceAttributes.Namespace,
+		Verb:      req.body.Spec.ResourceAttributes.Verb,
+		Resource:  req.body.Spec.ResourceAttributes.Resource,
+	}
+}
+
+func (req RequestParser) ExtractNonResourceSpecs() *unversioned.NonResourceSpec {
+	if !req.IsNonResourceRequest() {
+		return nil
+	}
+	return &unversioned.NonResourceSpec{
+		Path: req.body.Spec.NonResourceAttributes.Path,
+		Verb: req.body.Spec.NonResourceAttributes.Verb,
+	}
+}
+
+// ExtractUserSpecs reads the request body received from API server and extracts all required scopes by the user
+func (req RequestParser) ExtractUserSpecs() *unversioned.UserSpec {
+	return &unversioned.UserSpec{
+		User:   req.body.Spec.User,
+		Groups: req.body.Spec.Groups,
+	}
 }

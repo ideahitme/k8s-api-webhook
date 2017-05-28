@@ -22,5 +22,10 @@ type ResponseConstructor interface {
 
 // RequestParser provides an interface to parse and retrieve the token from the authentication request
 type RequestParser interface {
-	ExtractSpecs(io.ReadCloser) (*unversioned.Specs, error)
+	ReadBody(body io.ReadCloser) error
+	IsResourceRequest() bool
+	IsNonResourceRequest() bool
+	ExtractResourceSpecs() *unversioned.ResourceSpec
+	ExtractNonResourceSpecs() *unversioned.NonResourceSpec
+	ExtractUserSpecs() *unversioned.UserSpec
 }

@@ -2,6 +2,7 @@ package authorizer
 
 import (
 	"github.com/casbin/casbin"
+	"github.com/ideahitme/k8s-api-webhook/authz/unversioned"
 )
 
 /**
@@ -26,12 +27,12 @@ func NewCasbin(policyFile string) (*Casbin, error) {
 
 // ResourceEnforce returns true, nil if the user is allowed to access specified
 // resource object
-func (c *Casbin) ResourceEnforce() (bool, error) {
+func (c *Casbin) ResourceEnforce(*unversioned.UserSpec, *unversioned.ResourceSpec) (bool, error) {
 	return false, nil
 }
 
 // NonResourceEnforce returns true, nil if the user is allowed to access specified
 // non resource object
-func (c *Casbin) NonResourceEnforce() (bool, error) {
+func (c *Casbin) NonResourceEnforce(*unversioned.UserSpec, *unversioned.NonResourceSpec) (bool, error) {
 	return false, nil
 }
