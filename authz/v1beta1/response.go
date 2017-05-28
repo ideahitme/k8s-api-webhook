@@ -51,10 +51,7 @@ func (ResponseConstructor) NewSuccessResponse() []byte {
 			Allowed: true,
 		},
 	}
-	b, err := json.Marshal(res)
-	if err != nil {
-		return nil
-	}
+	b, _ := json.Marshal(res)
 	return b
 }
 
@@ -68,9 +65,6 @@ func (ResponseConstructor) NewFailResponse(reason string) []byte {
 			Reason:  reason,
 		},
 	}
-	b, err := json.Marshal(res)
-	if err != nil {
-		return nil
-	}
+	b, _ := json.Marshal(res)
 	return b
 }

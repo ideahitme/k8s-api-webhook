@@ -18,17 +18,16 @@ import (
 )
 
 func TestNewAuthenticationHandler(t *testing.T) {
-	h := NewAuthenticationHandler(authenticator.Static{}, WithAPIVersion(V1Beta1))
+	h := NewAuthenticationHandler(authenticator.Static{}).WithAPIVersion(V1Beta1)
 	assert.Equal(t, h.authProvider, authenticator.Static{})
 }
 
 func TestWithAPIVersion(t *testing.T) {
-	h := &AuthenticationHandler{}
-	WithAPIVersion(V1Beta1)(h)
+	h := (&AuthenticationHandler{}).WithAPIVersion(V1Beta1)
 	assert.Equal(t, h.reqParser, v1beta1.RequestParser{})
 	assert.Equal(t, h.resConstructor, v1beta1.ResponseConstructor{})
 
-	WithAPIVersion(-1)(h)
+	h = h.WithAPIVersion(-1)
 	assert.Equal(t, h.reqParser, v1beta1.RequestParser{})
 	assert.Equal(t, h.resConstructor, v1beta1.ResponseConstructor{})
 }

@@ -95,20 +95,21 @@ type SubjectAccessReviewSpec struct {
 	User string `json:"user,omitempty"`
 	// Groups is the groups you're testing for.
 	Groups []string `json:"group,omitempty"`
-	// Extra corresponds to the user.Info.GetExtra() method from the authenticator.  Since that is input to the authorizer
-	// it needs a reflection here.
-	Extra map[string][]string `json:"extra,omitempty"`
+	// Extra map[string][]string `json:"extra,omitempty"` ignore extra fields
 }
 
 // RequestParser implements extraction of the spec according to the official requirement for v1beta1 version
 type RequestParser struct {
-	body SubjectAccessReview
+	body *SubjectAccessReview
 }
 
-func (req RequestParser) ReadBody(body io.ReadCloser) error {
+// ReadBody parses the request body into k8s API Server specified format
+// it should be called before extracting specs
+func (req *RequestParser) ReadBody(body io.ReadCloser) error {
 	decoder := json.NewDecoder(body)
-	requestBody := SubjectAccessReview{}
-	err := decoder.Decode(&requestBody)
+	requestBody := &SubjectAccessReview{}
+
+	err := decoder.Decode(requestBody)
 	if err != nil {
 		return err
 	}
@@ -118,15 +119,21 @@ func (req RequestParser) ReadBody(body io.ReadCloser) error {
 	return nil
 }
 
-func (req RequestParser) IsResourceRequest() bool {
+// IsResourceRequest returns true if the request is targeted for a resource
+// for example "create pod"
+func (req *RequestParser) IsResourceRequest() bool {
 	return req.body.Spec.ResourceAttributes != nil
 }
 
-func (req RequestParser) IsNonResourceRequest() bool {
+// IsNonResourceRequest returns true if the request is targeted for a non-resource,
+// for example "metrics" exposed by API Server
+func (req *RequestParser) IsNonResourceRequest() bool {
 	return req.body.Spec.NonResourceAttributes != nil
 }
 
-func (req RequestParser) ExtractResourceSpecs() *unversioned.ResourceSpec {
+// ExtractResourceSpecs extracts resource related fields from previously read request body
+// see ReadBody method
+func (req *RequestParser) ExtractResourceSpecs() *unversioned.ResourceSpec {
 	if !req.IsResourceRequest() {
 		return nil
 	}
@@ -137,7 +144,9 @@ func (req RequestParser) ExtractResourceSpecs() *unversioned.ResourceSpec {
 	}
 }
 
-func (req RequestParser) ExtractNonResourceSpecs() *unversioned.NonResourceSpec {
+// ExtractNonResourceSpecs extracts non-resource related fields from previously read request body
+// see ReadBody method
+func (req *RequestParser) ExtractNonResourceSpecs() *unversioned.NonResourceSpec {
 	if !req.IsNonResourceRequest() {
 		return nil
 	}
@@ -148,7 +157,7 @@ func (req RequestParser) ExtractNonResourceSpecs() *unversioned.NonResourceSpec 
 }
 
 // ExtractUserSpecs reads the request body received from API server and extracts all required scopes by the user
-func (req RequestParser) ExtractUserSpecs() *unversioned.UserSpec {
+func (req *RequestParser) ExtractUserSpecs() *unversioned.UserSpec {
 	return &unversioned.UserSpec{
 		User:   req.body.Spec.User,
 		Groups: req.body.Spec.Groups,

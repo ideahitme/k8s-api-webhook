@@ -9,37 +9,43 @@ import (
 
 // AuthorizationHandler implements the webhook handler
 type AuthorizationHandler struct {
-	authorizer     authorizer.Authorizer
-	resConstructor ResponseConstructor
-	reqParser      RequestParser
+	resourceAuthorizer    authorizer.ResourceAuthorizer
+	nonResourceAuthorizer authorizer.NonResourceAuthorizer
+	resConstructor        ResponseConstructor
+	reqParser             RequestParser
 }
 
-// Option extends default AuthorizationHandler
-type Option func(*AuthorizationHandler)
-
 // NewAuthorizationHandler returns authentication http handler
-func NewAuthorizationHandler(authz authorizer.Authorizer, opts ...Option) *AuthorizationHandler {
+func NewAuthorizationHandler() *AuthorizationHandler {
 	h := &AuthorizationHandler{
-		authorizer:     authz,
-		resConstructor: v1beta1.ResponseConstructor{},
-		reqParser:      v1beta1.RequestParser{},
-	}
-
-	for _, opt := range opts {
-		opt(h)
+		resourceAuthorizer:    authorizer.ResourceUnauthorizer{},
+		nonResourceAuthorizer: authorizer.NonResourceUnauthorizer{},
+		resConstructor:        &v1beta1.ResponseConstructor{},
+		reqParser:             &v1beta1.RequestParser{},
 	}
 
 	return h
 }
 
 // WithAPIVersion specify API version to use for handling authentication requests
-func WithAPIVersion(apiVersion APIVersion) func(*AuthorizationHandler) {
-	return func(h *AuthorizationHandler) {
-		if apiVersion == V1Beta1 {
-			h.resConstructor = v1beta1.ResponseConstructor{}
-			h.reqParser = v1beta1.RequestParser{}
-		}
+func (h *AuthorizationHandler) WithAPIVersion(apiVersion APIVersion) *AuthorizationHandler {
+	if apiVersion == V1Beta1 {
+		h.resConstructor = &v1beta1.ResponseConstructor{}
+		h.reqParser = &v1beta1.RequestParser{}
 	}
+	return h
+}
+
+// WithResourceAuthorizer specify API version to use for handling authentication requests
+func (h *AuthorizationHandler) WithResourceAuthorizer(authz authorizer.ResourceAuthorizer) *AuthorizationHandler {
+	h.resourceAuthorizer = authz
+	return h
+}
+
+// WithNonResourceAuthorizer specify API version to use for handling authentication requests
+func (h *AuthorizationHandler) WithNonResourceAuthorizer(authz authorizer.NonResourceAuthorizer) *AuthorizationHandler {
+	h.nonResourceAuthorizer = authz
+	return h
 }
 
 func (h *AuthorizationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -48,13 +54,12 @@ func (h *AuthorizationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		w.Write(h.resConstructor.NewFailResponse(err.Error()))
 		return
 	}
-	defer r.Body.Close()
 
 	userSpec := h.reqParser.ExtractUserSpecs()
 
 	if h.reqParser.IsResourceRequest() {
 		resourceSpec := h.reqParser.ExtractResourceSpecs()
-		allowed, err := h.authorizer.ResourceEnforce(userSpec, resourceSpec)
+		allowed, err := h.resourceAuthorizer.IsAuthorized(userSpec, resourceSpec)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(h.resConstructor.NewFailResponse(err.Error()))
@@ -69,7 +74,7 @@ func (h *AuthorizationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 
 	if h.reqParser.IsNonResourceRequest() {
 		nonResourceSpec := h.reqParser.ExtractNonResourceSpecs()
-		allowed, err := h.authorizer.NonResourceEnforce(userSpec, nonResourceSpec)
+		allowed, err := h.nonResourceAuthorizer.IsAuthorized(userSpec, nonResourceSpec)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write(h.resConstructor.NewFailResponse(err.Error()))

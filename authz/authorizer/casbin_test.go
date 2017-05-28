@@ -1,3 +1,4 @@
 package authorizer
 
-var _ Authorizer = &Casbin{}
+var _ ResourceAuthorizer = &ResourceCasbin{}
+var _ NonResourceAuthorizer = &NonResourceCasbin{}

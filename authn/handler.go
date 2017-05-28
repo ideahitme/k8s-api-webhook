@@ -14,32 +14,24 @@ type AuthenticationHandler struct {
 	reqParser      RequestParser
 }
 
-// Option extends default AuthenticationHandler
-type Option func(*AuthenticationHandler)
-
 // NewAuthenticationHandler returns authentication http handler
-func NewAuthenticationHandler(p authenticator.Authenticator, opts ...Option) *AuthenticationHandler {
+func NewAuthenticationHandler(p authenticator.Authenticator) *AuthenticationHandler {
 	h := &AuthenticationHandler{
 		authProvider:   p,
 		resConstructor: v1beta1.ResponseConstructor{},
 		reqParser:      v1beta1.RequestParser{},
 	}
 
-	for _, opt := range opts {
-		opt(h)
-	}
-
 	return h
 }
 
 // WithAPIVersion specify API version to use for handling authentication requests
-func WithAPIVersion(apiVersion APIVersion) func(*AuthenticationHandler) {
-	return func(h *AuthenticationHandler) {
-		if apiVersion == V1Beta1 {
-			h.resConstructor = v1beta1.ResponseConstructor{}
-			h.reqParser = v1beta1.RequestParser{}
-		}
+func (h *AuthenticationHandler) WithAPIVersion(apiVersion APIVersion) *AuthenticationHandler {
+	if apiVersion == V1Beta1 {
+		h.resConstructor = v1beta1.ResponseConstructor{}
+		h.reqParser = v1beta1.RequestParser{}
 	}
+	return h
 }
 
 func (h *AuthenticationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +41,6 @@ func (h *AuthenticationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		w.Write(h.resConstructor.NewFailResponse())
 		return
 	}
-	defer r.Body.Close()
 
 	user, err := h.authProvider.Authenticate(token)
 	if err != nil {
