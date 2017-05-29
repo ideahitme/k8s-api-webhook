@@ -143,8 +143,8 @@ func (suite *AuthorizationHandlerSuite) TestCreateAuthorizationHandler() {
 func (suite *AuthorizationHandlerSuite) TestExtensions() {
 	h := CreateAuthorizationHandler().WithAPIVersion(versioned.V1Beta1).WithNonResourceAuthorizer(&authorizer.CasbinNonResource{}).
 		WithResourceAuthorizer(&authorizer.CasbinResource{})
-	suite.IsType(&authorizer.CasbinResource{}, h.resourceAuthorizer, "default should be overriden with casbin")
-	suite.IsType(&authorizer.CasbinNonResource{}, h.nonResourceAuthorizer, "default should be overriden with casbin")
+	suite.IsType(&authorizer.CasbinResource{}, h.resourceAuthorizer, "default should be overridden with casbin")
+	suite.IsType(&authorizer.CasbinNonResource{}, h.nonResourceAuthorizer, "default should be overridden with casbin")
 	suite.IsType(&v1beta1.ResponseConstructor{}, h.resConstructor, "default should be v1beta1")
 	suite.IsType(&v1beta1.RequestParser{}, h.reqParser, "default should be v1beta1")
 }
