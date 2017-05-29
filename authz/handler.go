@@ -4,15 +4,16 @@ import (
 	"net/http"
 
 	"github.com/ideahitme/k8s-api-webhook/authz/authorizer"
-	"github.com/ideahitme/k8s-api-webhook/authz/v1beta1"
+	"github.com/ideahitme/k8s-api-webhook/authz/versioned"
+	"github.com/ideahitme/k8s-api-webhook/authz/versioned/v1beta1"
 )
 
 // AuthorizationHandler implements the webhook handler
 type AuthorizationHandler struct {
 	resourceAuthorizer    authorizer.ResourceAuthorizer
 	nonResourceAuthorizer authorizer.NonResourceAuthorizer
-	resConstructor        ResponseConstructor
-	reqParser             RequestParser
+	resConstructor        versioned.ResponseConstructor
+	reqParser             versioned.RequestParser
 }
 
 // CreateAuthorizationHandler returns authentication http handler
@@ -28,8 +29,8 @@ func CreateAuthorizationHandler() *AuthorizationHandler {
 }
 
 // WithAPIVersion specify API version to use for handling authentication requests
-func (h *AuthorizationHandler) WithAPIVersion(apiVersion APIVersion) *AuthorizationHandler {
-	if apiVersion == V1Beta1 {
+func (h *AuthorizationHandler) WithAPIVersion(apiVersion versioned.APIVersion) *AuthorizationHandler {
+	if apiVersion == versioned.V1Beta1 {
 		h.resConstructor = &v1beta1.ResponseConstructor{}
 		h.reqParser = &v1beta1.RequestParser{}
 	}

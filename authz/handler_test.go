@@ -12,7 +12,8 @@ import (
 
 	"github.com/ideahitme/k8s-api-webhook/authz/authorizer"
 	"github.com/ideahitme/k8s-api-webhook/authz/unversioned"
-	"github.com/ideahitme/k8s-api-webhook/authz/v1beta1"
+	"github.com/ideahitme/k8s-api-webhook/authz/versioned"
+	"github.com/ideahitme/k8s-api-webhook/authz/versioned/v1beta1"
 )
 
 type AuthorizationHandlerSuite struct {
@@ -140,7 +141,7 @@ func (suite *AuthorizationHandlerSuite) TestCreateAuthorizationHandler() {
 
 // TestExtensions makes sure with chaining works as expected
 func (suite *AuthorizationHandlerSuite) TestExtensions() {
-	h := CreateAuthorizationHandler().WithAPIVersion(V1Beta1).WithNonResourceAuthorizer(&authorizer.CasbinNonResource{}).
+	h := CreateAuthorizationHandler().WithAPIVersion(versioned.V1Beta1).WithNonResourceAuthorizer(&authorizer.CasbinNonResource{}).
 		WithResourceAuthorizer(&authorizer.CasbinResource{})
 	suite.IsType(&authorizer.CasbinResource{}, h.resourceAuthorizer, "default should be overriden with casbin")
 	suite.IsType(&authorizer.CasbinNonResource{}, h.nonResourceAuthorizer, "default should be overriden with casbin")
