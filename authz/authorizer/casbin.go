@@ -9,13 +9,13 @@ import (
 Authorizer enabled via casbin style file and using casbin package (github.com/casbin/casbin)
 */
 
-// ResourceCasbin type authorizer for resources
-type ResourceCasbin struct {
+// CasbinResource type authorizer for resources
+type CasbinResource struct {
 	casbin *casbin.Enforcer
 }
 
-// NonResourceCasbin type authorizer for non-resources
-type NonResourceCasbin struct {
+// CasbinNonResource type authorizer for non-resources
+type CasbinNonResource struct {
 	casbin *casbin.Enforcer
 }
 
@@ -25,23 +25,23 @@ const (
 )
 
 // NewCasbinResource reads csv policy file and constructs required policy enforcer
-func NewCasbinResource(policyFile string) (*ResourceCasbin, error) {
+func NewCasbinResource(policyFile string) (*CasbinResource, error) {
 	return nil, nil
 }
 
 // NewCasbinNonResource reads csv policy file and constructs required policy enforcer
-func NewCasbinNonResource(policyFile string) (*NonResourceCasbin, error) {
+func NewCasbinNonResource(policyFile string) (*CasbinNonResource, error) {
 	return nil, nil
 }
 
 // IsAuthorized returns true, nil if the user is allowed to access specified
 // resource object
-func (c *ResourceCasbin) IsAuthorized(*unversioned.UserSpec, *unversioned.ResourceSpec) (bool, error) {
+func (c *CasbinResource) IsAuthorized(*unversioned.UserSpec, *unversioned.ResourceSpec) (bool, error) {
 	return false, nil
 }
 
 // IsAuthorized returns true, nil if the user is allowed to access specified
 // non resource object
-func (c *NonResourceCasbin) IsAuthorized(*unversioned.UserSpec, *unversioned.NonResourceSpec) (bool, error) {
+func (c *CasbinNonResource) IsAuthorized(*unversioned.UserSpec, *unversioned.NonResourceSpec) (bool, error) {
 	return false, nil
 }
