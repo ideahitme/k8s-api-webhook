@@ -15,8 +15,8 @@ type AuthorizationHandler struct {
 	reqParser             RequestParser
 }
 
-// NewAuthorizationHandler returns authentication http handler
-func NewAuthorizationHandler() *AuthorizationHandler {
+// CreateAuthorizationHandler returns authentication http handler
+func CreateAuthorizationHandler() *AuthorizationHandler {
 	h := &AuthorizationHandler{
 		resourceAuthorizer:    authorizer.ResourceUnauthorizer{},
 		nonResourceAuthorizer: authorizer.NonResourceUnauthorizer{},
@@ -56,37 +56,29 @@ func (h *AuthorizationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 
 	userSpec := h.reqParser.ExtractUserSpecs()
+	var allowed bool
+	var err error
 
 	if h.reqParser.IsResourceRequest() {
 		resourceSpec := h.reqParser.ExtractResourceSpecs()
-		allowed, err := h.resourceAuthorizer.IsAuthorized(userSpec, resourceSpec)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write(h.resConstructor.NewFailResponse(err.Error()))
-			return
-		}
-		if !allowed {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write(h.resConstructor.NewFailResponse("Unauthorized"))
-			return
-		}
+		allowed, err = h.resourceAuthorizer.IsAuthorized(userSpec, resourceSpec)
 	}
 
 	if h.reqParser.IsNonResourceRequest() {
 		nonResourceSpec := h.reqParser.ExtractNonResourceSpecs()
-		allowed, err := h.nonResourceAuthorizer.IsAuthorized(userSpec, nonResourceSpec)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write(h.resConstructor.NewFailResponse(err.Error()))
-			return
-		}
-		if !allowed {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write(h.resConstructor.NewFailResponse("Unauthorized"))
-			return
-		}
+		allowed, err = h.nonResourceAuthorizer.IsAuthorized(userSpec, nonResourceSpec)
 	}
 
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(h.resConstructor.NewFailResponse(err.Error()))
+		return
+	}
+	if !allowed {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write(h.resConstructor.NewFailResponse("Unauthorized"))
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(h.resConstructor.NewSuccessResponse())
 }

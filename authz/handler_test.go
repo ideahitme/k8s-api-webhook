@@ -28,7 +28,7 @@ type AuthorizationHandlerSuite struct {
 }
 
 func (suite *AuthorizationHandlerSuite) SetupTest() {
-	unauthzServer := httptest.NewServer(NewAuthorizationHandler())
+	unauthzServer := httptest.NewServer(CreateAuthorizationHandler())
 	suite.unauthorizeEndpoint = unauthzServer.URL
 
 	suite.resourcePayload = `{
@@ -123,15 +123,15 @@ func (suite *AuthorizationHandlerSuite) SetupTest() {
 		Verb: "get",
 	}).Return(false, errors.New("hackers not allowed"))
 
-	mockHandler := NewAuthorizationHandler().
+	mockHandler := CreateAuthorizationHandler().
 		WithNonResourceAuthorizer(mockNonResourceHandler).
 		WithResourceAuthorizer(mockResourceHandler)
 	mockServer := httptest.NewServer(mockHandler)
 	suite.mockEndpoint = mockServer.URL
 }
 
-func (suite *AuthorizationHandlerSuite) TestNewAuthorizationHandler() {
-	h := NewAuthorizationHandler()
+func (suite *AuthorizationHandlerSuite) TestCreateAuthorizationHandler() {
+	h := CreateAuthorizationHandler()
 	suite.IsType(authorizer.ResourceUnauthorizer{}, h.resourceAuthorizer, "default should be unauthorizer")
 	suite.IsType(authorizer.NonResourceUnauthorizer{}, h.nonResourceAuthorizer, "default should be unauthorizer")
 	suite.IsType(&v1beta1.ResponseConstructor{}, h.resConstructor, "default should be v1beta1")
@@ -140,8 +140,7 @@ func (suite *AuthorizationHandlerSuite) TestNewAuthorizationHandler() {
 
 // TestExtensions makes sure with chaining works as expected
 func (suite *AuthorizationHandlerSuite) TestExtensions() {
-	h := NewAuthorizationHandler()
-	h.WithAPIVersion(V1Beta1).WithNonResourceAuthorizer(&authorizer.CasbinNonResource{}).
+	h := CreateAuthorizationHandler().WithAPIVersion(V1Beta1).WithNonResourceAuthorizer(&authorizer.CasbinNonResource{}).
 		WithResourceAuthorizer(&authorizer.CasbinResource{})
 	suite.IsType(&authorizer.CasbinResource{}, h.resourceAuthorizer, "default should be overriden with casbin")
 	suite.IsType(&authorizer.CasbinNonResource{}, h.nonResourceAuthorizer, "default should be overriden with casbin")
