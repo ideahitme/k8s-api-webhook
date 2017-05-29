@@ -13,17 +13,21 @@ import (
 
 	"github.com/ideahitme/k8s-api-webhook/authn/authenticator"
 	"github.com/ideahitme/k8s-api-webhook/authn/unversioned"
-	"github.com/ideahitme/k8s-api-webhook/authn/v1beta1"
+	"github.com/ideahitme/k8s-api-webhook/authn/versioned"
+	"github.com/ideahitme/k8s-api-webhook/authn/versioned/v1beta1"
 	"github.com/ideahitme/k8s-api-webhook/internal/testutils"
 )
 
-func TestNewAuthenticationHandler(t *testing.T) {
-	h := NewAuthenticationHandler(authenticator.Static{}).WithAPIVersion(V1Beta1)
-	assert.Equal(t, h.authProvider, authenticator.Static{})
+func TestCreateAuthenticationHandler(t *testing.T) {
+	h := CreateAuthenticationHandler()
+	assert.IsType(t, h.authenticator, authenticator.Noop{})
+
+	h = h.WithAuthenticator(authenticator.Static{}).WithAPIVersion(versioned.V1Beta1)
+	assert.Equal(t, h.authenticator, authenticator.Static{})
 }
 
 func TestWithAPIVersion(t *testing.T) {
-	h := (&AuthenticationHandler{}).WithAPIVersion(V1Beta1)
+	h := (&AuthenticationHandler{}).WithAPIVersion(versioned.V1Beta1)
 	assert.Equal(t, h.reqParser, v1beta1.RequestParser{})
 	assert.Equal(t, h.resConstructor, v1beta1.ResponseConstructor{})
 
@@ -47,7 +51,7 @@ func TestServeHTTP(t *testing.T) {
 	assert.Nil(t, err)
 	failAuthenticator := errAuthenticator{invalidToken: "cause-error"}
 
-	handler := NewAuthenticationHandler(authenticator.NewAggregator(staticAuthenticator, failAuthenticator))
+	handler := CreateAuthenticationHandler().WithAuthenticator(authenticator.NewAggregator(staticAuthenticator, failAuthenticator))
 	mockServer := httptest.NewServer(handler)
 	defer mockServer.Close()
 

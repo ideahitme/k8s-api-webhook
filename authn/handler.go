@@ -4,20 +4,21 @@ import (
 	"net/http"
 
 	"github.com/ideahitme/k8s-api-webhook/authn/authenticator"
-	"github.com/ideahitme/k8s-api-webhook/authn/v1beta1"
+	"github.com/ideahitme/k8s-api-webhook/authn/versioned"
+	"github.com/ideahitme/k8s-api-webhook/authn/versioned/v1beta1"
 )
 
 // AuthenticationHandler implements the webhook handler
 type AuthenticationHandler struct {
-	authProvider   authenticator.Authenticator
-	resConstructor ResponseConstructor
-	reqParser      RequestParser
+	authenticator  authenticator.Authenticator
+	resConstructor versioned.ResponseConstructor
+	reqParser      versioned.RequestParser
 }
 
-// NewAuthenticationHandler returns authentication http handler
-func NewAuthenticationHandler(p authenticator.Authenticator) *AuthenticationHandler {
+// CreateAuthenticationHandler returns default authentication http handler
+func CreateAuthenticationHandler() *AuthenticationHandler {
 	h := &AuthenticationHandler{
-		authProvider:   p,
+		authenticator:  authenticator.Noop{},
 		resConstructor: v1beta1.ResponseConstructor{},
 		reqParser:      v1beta1.RequestParser{},
 	}
@@ -25,9 +26,15 @@ func NewAuthenticationHandler(p authenticator.Authenticator) *AuthenticationHand
 	return h
 }
 
+// WithAuthenticator adds authenticator to overwrite default noop authenticator
+func (h *AuthenticationHandler) WithAuthenticator(p authenticator.Authenticator) *AuthenticationHandler {
+	h.authenticator = p
+	return h
+}
+
 // WithAPIVersion specify API version to use for handling authentication requests
-func (h *AuthenticationHandler) WithAPIVersion(apiVersion APIVersion) *AuthenticationHandler {
-	if apiVersion == V1Beta1 {
+func (h *AuthenticationHandler) WithAPIVersion(apiVersion versioned.APIVersion) *AuthenticationHandler {
+	if apiVersion == versioned.V1Beta1 {
 		h.resConstructor = v1beta1.ResponseConstructor{}
 		h.reqParser = v1beta1.RequestParser{}
 	}
@@ -42,7 +49,7 @@ func (h *AuthenticationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	user, err := h.authProvider.Authenticate(token)
+	user, err := h.authenticator.Authenticate(token)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(h.resConstructor.NewFailResponse())

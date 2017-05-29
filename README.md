@@ -8,7 +8,7 @@ Library for quickly bootstrapping authentication/authorisation webhook for Kuber
 
 - [x] Move `main.go` to `cmd/main.go`
 - [ ] Add full integration step-by-step tutorial with casbin
-- [x] Think how to restructure packages
+- [x] Restructure packages
 - [ ] Provide detailed readme how to extend it 
 - [x] Write authorization module
 - [x] Complete tests
