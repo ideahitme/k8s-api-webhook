@@ -1,0 +1,12 @@
+p, admin, *, *, *
+p, *, operator*, *, *
+p, *, *, /api, get
+p, *, *, /api/*, get
+p, *, *, /apis, get
+p, *, *, /apis/*, get
+p, *, *, /version, get
+p, alice, *, /api, (get)|(post)
+
+g, kubelet, admin
+g, ideahitme, admin
+g2, MySuperUserGroup, admin

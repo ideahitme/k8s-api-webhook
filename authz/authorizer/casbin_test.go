@@ -3,6 +3,9 @@ package authorizer
 import (
 	"testing"
 
+	"io/ioutil"
+
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -17,8 +20,14 @@ type CasbinResourceSuite struct {
 func (suite *CasbinResourceSuite) SetupTest() {
 	var err error
 
-	suite.casbinAuthz, err = NewCasbinResource("")
-	suite.NoError(err, "file should exist!")
+	suite.casbinAuthz, err = NewCasbinResource("testdata/resource/policy.csv", "testdata/resource/model.conf")
+	suite.NoError(err, "casbin client could not be created!")
+}
+
+func (suite *CasbinResourceSuite) TestInitErrors() {
+	authz, err := NewCasbinResource("", "")
+	suite.Nil(authz, "should be nil")
+	suite.Error(err, "error should be returned")
 }
 
 func (suite *CasbinResourceSuite) TestIsAuthorized() {
@@ -35,8 +44,14 @@ type CasbinNonResourceSuite struct {
 func (suite *CasbinNonResourceSuite) SetupTest() {
 	var err error
 
-	suite.casbinAuthz, err = NewCasbinNonResource("")
-	suite.NoError(err, "file should exist!")
+	suite.casbinAuthz, err = NewCasbinNonResource("testdata/non-resource/policy.csv", "testdata/non-resource/model.conf")
+	suite.NoError(err, "casbin client could not be created!")
+}
+
+func (suite *CasbinNonResourceSuite) TestInitErrors() {
+	authz, err := NewCasbinNonResource("", "")
+	suite.Nil(authz, "should be nil")
+	suite.Error(err, "error should be returned")
 }
 
 func (suite *CasbinNonResourceSuite) TestIsAuthorized() {
@@ -48,4 +63,21 @@ func (suite *CasbinNonResourceSuite) TestIsAuthorized() {
 func TestCasbin(t *testing.T) {
 	suite.Run(t, new(CasbinResourceSuite))
 	suite.Run(t, new(CasbinNonResourceSuite))
+}
+
+func TestGenerateCasbinConfigFile(t *testing.T) {
+	f, err := GenerateCasbinConfigFile("policy-file.csv", "model-file.conf")
+	assert.NoError(t, err, "no error expected")
+	defer f.Close()
+
+	b, err := ioutil.ReadFile(f.Name())
+	assert.NoError(t, err, "no error expected")
+
+	assert.Equal(t, `[default]
+model_path = model-file.conf
+
+policy_backend = file
+
+[file]
+policy_path = policy-file.csv`, string(b))
 }
